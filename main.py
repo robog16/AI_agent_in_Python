@@ -42,4 +42,4 @@ def main():
         print(f'Response tokens: {response_tokens}')
     
 if __name__ == '__main__':
-    main() 
+    main()
