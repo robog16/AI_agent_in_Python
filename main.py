@@ -2,6 +2,7 @@ import os
 import argparse
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 # loading my .env file
 load_dotenv()
@@ -20,9 +21,14 @@ parser = argparse.ArgumentParser(description="Chatbot")
 parser.add_argument("user_prompt", type=str, help="User prompt")
 args = parser.parse_args()
 
+# creating a list of messages, which is the format that the genai library expects for conversations. 
+# Each message has a role (in this case, "user") and parts (which is a list of parts, where each part has text). 
+# In this case, we only have one part, which is the user's prompt.
+messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
+
 # first object of response from gemini LLM + my prompt
 # prompt = 'Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum.' /not necesarry right now
-response = client.models.generate_content(model='gemini-2.5-flash', contents=args.user_prompt)
+response = client.models.generate_content(model='gemini-2.5-flash', contents=messages)
 
 # spent tokens
 prompt_tokens = response.usage_metadata.prompt_token_count
