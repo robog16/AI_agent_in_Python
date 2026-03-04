@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import available_functions, call_function
 
 # loading my .env file
 load_dotenv()
@@ -46,9 +46,32 @@ def main():
         print(f'Prompt tokens: {prompt_tokens}')
         print(f'Response tokens: {response_tokens}')
     
+    # Initialize a list to store the results we get back from our functions
+    function_results = []
+
     if response.function_calls:
-        for x in response.function_calls:
-            print(f"Calling function: {x.name}({x.args})")
+        for function_call in response.function_calls:
+            # 10. Use call_function instead of just printing the name
+            function_call_result = call_function(function_call, verbose=args.verbose)
+
+            # 10.1. Check that we actually got parts back
+            if not function_call_result.parts:
+                raise Exception("Function call result has no parts")
+
+            # 10.2. & 10.3. Validate the response structure
+            # We look at the first part returned by call_function
+            part = function_call_result.parts[0]
+            if part.function_response is None:
+                raise Exception("Function response is missing")
+            if part.function_response.response is None:
+                raise Exception("Function response data is missing")
+
+            # 10.4. Save the part so we can use it later
+            function_results.append(part)
+
+            # 10.5. If verbose, print the actual result dictionary
+            if args.verbose:
+                print(f"-> {part.function_response.response}")
     else:
         print(f'Response:\n{response.text}')
     
