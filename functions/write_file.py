@@ -1,4 +1,29 @@
 import os
+from google import genai
+from google.genai import types
+
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="Overwrites the content of a specified file within the working directory. It automatically creates any missing parent directories.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            'working_directory': types.Schema(
+                type=types.Type.STRING,
+                description="The path to the permitted root directory where the agent is allowed to write.",
+            ),
+            'file_path': types.Schema(
+                type=types.Type.STRING,
+                description="The path to the file to be written, relative to the working directory.",
+            ),
+            'content': types.Schema(
+                type=types.Type.STRING,
+                description="The string content to be written into the file. This will replace any existing content.",
+            )
+        },
+        required = ['working_directory', 'file_path', 'content']
+    )
+)
 
 def write_file(working_directory, file_path, content):
     try:
