@@ -2,13 +2,13 @@ from functions.get_file_content import get_file_content
 from config import MAX_CHARS
 
 def run_test():
-    # lorem truncation (asserty)
+    # Testuje, či sa súbor načíta a či sa pri dlhom obsahu správne orezá obsah na maximálnu dĺžku.
     content = get_file_content("calculator", "lorem.txt")
     assert len(content) >= MAX_CHARS
     assert content.endswith(f'[...File "lorem.txt" truncated at {MAX_CHARS} characters]')
     
 
-    # ostatné prípady (print)
+    # Testuje ďalšie prípady: bežný súbor, vnorený súbor, zakázanú cestu a neexistujúci súbor.
     print(get_file_content("calculator", "main.py"))
     print(get_file_content("calculator", "pkg/calculator.py"))
     print(get_file_content("calculator", "/bin/cat"))

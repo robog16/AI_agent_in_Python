@@ -3,6 +3,7 @@ import subprocess
 from google import genai
 from google.genai import types
 
+# Definícia nástroja pre model: umožní mu spustiť Python skript v povolenom pracovnom priestore.
 schema_run_python_file = types.FunctionDeclaration(
     name="run_python_file",
     description="Executes a Python file within the working directory and returns its output (stdout and stderr).",
@@ -24,27 +25,28 @@ schema_run_python_file = types.FunctionDeclaration(
     )
 )
 
+# Implementácia spúšťania Python súboru cez subprocess a vrátenie stdout/stderr späť modelu.
 def run_python_file(working_directory, file_path, args=None):
     try:
-        # getting absolut path to working_directory
+        # Prevedie relatívnu cestu na absolútnu cestu pre spustením skriptu.
         working_dir_abs = os.path.abspath(working_directory)
         
-        # getting path and normalize path of file
+        # Vytvorí cieľovú cestu k skriptu a normalizuje ju.
         target_file = os.path.normpath(os.path.join(working_dir_abs, file_path))
 
-        # 3. is file within a working_directory
+        # Zabráni spusteniu súboru mimo povoleného adresára.
         if os.path.commonpath([working_dir_abs, target_file]) != working_dir_abs:
             return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
 
-        # 4. if file is really a file not a directory or if even exists
+        # Overí, či cieľ existuje ako súbor a nie ako adresár.
         if not os.path.isfile(target_file):
             return f'Error: "{file_path}" does not exist or is not a regular file'
         
-        # if file ends with .py
+        # Zabezpečí, že sa spúšťa len Python skript, nie nejaký iný typ súboru.
         if not target_file.endswith('.py'):
             return f'Error: "{file_path}" is not a Python file'
         
-        # using a subprocess to run the file
+        # Spustí skript pomocou subprocess a zachytí jeho výstup.
         command = ["python", target_file]
         if args:
             command.extend(args)

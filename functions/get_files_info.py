@@ -2,6 +2,7 @@ import os
 from google import genai
 from google.genai import types
 
+# Definícia nástroja pre model: umožní mu zistiť obsah adresára v obmedzenom priestore.
 schema_get_files_info = types.FunctionDeclaration(
     name="get_files_info",
     description="Lists files in a specified directory relative to the working directory, providing file size and directory status",
@@ -16,23 +17,24 @@ schema_get_files_info = types.FunctionDeclaration(
     ),
 )
 
+# Praktická implementácia nástroja: vypíše súbory a adresáre v zadanom priečinku, pričom kontroluje bezpečnosť cesty.
 def get_files_info(working_directory, directory="."):
     try:
-        # getting absolut path to working_directory
+        # Prevedie relatívny pracovný adresár na absolútnu cestu.
         working_dir_abs = os.path.abspath(working_directory)
         
-        # getting path and normalize path of target directory
+        # Vytvorí cieľovú cestu k adresáru a normalizuje ju.
         target_dir = os.path.normpath(os.path.join(working_dir_abs, directory))
 
-        # 3. is directory within a working_directory
+        # Skontroluje, či cieľový adresár nevychádza mimo povolený priestor.
         if os.path.commonpath([working_dir_abs, target_dir]) != working_dir_abs:
             return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
 
-        # 4. if directory is really a directory not a file
+        # Overí, že sa jedná o skutočný adresár, nie o súbor.
         if not os.path.isdir(target_dir):
             return f'Error: "{directory}" is not a directory'
 
-        # final string
+        # Získa zoznam položiek v adresári a pripraví ich na návrat modelu.
         items = os.listdir(target_dir)
         lines = []
         for item in items:

@@ -10,22 +10,28 @@ from call_function import available_functions, call_function
 from config import MAX_ITERS
 from prompts import system_prompt
 
+# Hlavná funkcia aplikácie: spracuje vstupný príkaz používateľa a spustí komunikáciu s Gemini API.
 def main():
+    # Vytvorenie CLI rozhrania pre prijatie používateľského príkazu. zisti podla stavby prikazu v CLI co za argument je co. napr
+    # python main.py "napíš mi kód" --verbose.... ak spravim toto tak zisti co je co a co je jaky flag
     parser = argparse.ArgumentParser(description="AI Code Assistant")
     parser.add_argument("user_prompt", type=str, help="Prompt to send to Gemini")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
+    # Načíta API kľúč z prostredia, aby sa aplikácia mohla pripojiť k Gemini.
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY environment variable not set")
 
+    # Vytvorenie klienta pre komunikáciu s Gemini a inicializácia prvého používateľského správania.
     client = genai.Client(api_key=api_key)
     messages = [types.Content(role="user", parts=[types.Part(text=args.user_prompt)])]
     if args.verbose:
         print(f"User prompt: {args.user_prompt}\n")
 
+    # Opakovaná slučka: agent sa pokúša získať odpoveď a v prípade potreby vykonať nástroje.
     for _ in range(MAX_ITERS):
         try:
             final_response = generate_content(client, messages, args.verbose)
@@ -39,7 +45,9 @@ def main():
     print(f"Maximum iterations ({MAX_ITERS}) reached")
     sys.exit(1)
 
+# Táto funkcia pošle správu modelu a spracuje odpoveď vrátane volania nástrojov, ak ich model potrebuje.
 def generate_content(client, messages, verbose):
+    # Poslanie správy modelu s definovanými nástrojmi a systémovým promptom.
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=messages,
@@ -54,14 +62,17 @@ def generate_content(client, messages, verbose):
         print("Prompt tokens:", response.usage_metadata.prompt_token_count)
         print("Response tokens:", response.usage_metadata.candidates_token_count)
 
+    # Uloženie odpovede modelu do histórie konverzácie pre ďalšie iterácie.
     if response.candidates:
         for candidate in response.candidates:
             if candidate.content:
                 messages.append(candidate.content)
 
+    # Ak model nepožaduje žiadny nástroj, vracia sa finálna odpoveď.
     if not response.function_calls:
         return response.text
 
+    # Ak model požiada o nástroj, vykoná sa jeho volanie a výsledok sa pošle späť modelu.
     function_responses = []
     for function_call in response.function_calls:
         result = call_function(function_call, verbose)

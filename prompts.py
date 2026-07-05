@@ -1,3 +1,4 @@
+# Systémový prompt pre model: určuje mu, aké akcie môže vykonávať a v akom priestore.
 system_prompt = """
 You are a helpful AI coding agent.
 
